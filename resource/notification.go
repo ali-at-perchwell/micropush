@@ -24,7 +24,7 @@ const (
 	SeenStatus         = "seen"
 )
 
-func (nr *NotificationResource) GetNotificationsForSubscription(subId string) error {
+func (nr *NotificationResource) GetNotifications(s Subscription) error {
 
 	return db.QueryRow(sql)
 }
