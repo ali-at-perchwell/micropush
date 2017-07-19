@@ -1,5 +1,15 @@
 package model
 
+import "database/sql"
+
+type NotificationResource struct {
+	*sql.DB
+}
+
+func NewNotificationResource(db *sql.DB) (*DB, error) {
+	return &DB{db}, nil
+}
+
 type Notification struct {
 	Id          int32  `json:"id"`
 	Created     int32  `json:"created"`
@@ -13,3 +23,8 @@ const (
 	NotificationStatus = "notify"
 	SeenStatus         = "seen"
 )
+
+func (nr *NotificationResource) GetNotificationsForSubscription(subId string) error {
+
+	return db.QueryRow(sql)
+}
