@@ -11,7 +11,10 @@ import (
 	"github.com/gorilla/mux"
 	_ "github.com/lib/pq"
 
-	"/micropush/resource/push"
+	web_push "/micropush/resource/web/push" // the naming on this might be in violation
+	web_subscription "/micropush/resource/web/subscription"
+
+	devicepush "/micropush/resource/device/push"
 )
 
 // App represents the application
@@ -39,17 +42,23 @@ func (a *App) Run() { /// put in addr
 	log.Fatal(a.Router.Run()) //http.ListenAndServe(":8080", a.Router))
 }
 
-func (a *App) initializeRoutes() {
-	a.Router.GET("/healthCheck", pushResource.HealthCheck)
-
-	a.Router.POST("/token/token-web/:id", pushResource.CreateWebToken)
-	a.Router.DELETE("/token/token-web/:id", pushResource.DeleteWebToken)
-	a.Router.POST("/token/token-device/:id", pushResource.CreateDeviceToken)
-	a.Router.DELETE("/token/token-device/:id", pushResource.DeleteDeviceToken)
-
-	a.Router.POST("/initialize-push", pushResource.InitializePush)
+func HealthCheck(c *gin.Context) {
+	c.String(200, "Success")
 }
+func (a *App) initializeRoutes() {
+	a.Router.GET("/health", HealthCheck)
 
-func (a *App) getSubscriptions(w http.ResponseWriter, r *http.Request) {
-	count, _ := strconv.Atoi(r.FormValue("count"))
+	a.Router.POST("/subscribe/web", web_subscription.Create)
+	a.Router.DELETE("/subscribe/web", web_subscription.Delete)
+	// a.Router.DELETE("/subscribe/web/:id", web_subscription.Delete)  so here we would inspect the route params rather than json
+	a.Router.PUT("/subscribe/web", web_subscription.Update)
+
+	a.Router.POST("/subscribe/device", web_subscription.Create)
+	a.Router.DELETE("/subscribe/device", web_subscription.Delete)
+	a.Router.PUT("/subscribe/device", web_subscription.Update)
+
+	a.Router.POST("/subscribe/web/push", web_push.Create)
+	a.Router.PUT("/subscribe/web/push", web_push.Create) // we can have an edit, no? but no delete to re-alert
+
+	a.Router.POST("/subscribe/device/push", device_push.Create)
 }
