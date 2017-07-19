@@ -2,6 +2,7 @@ package main
 
 import (
 	"micropush/service"
+	_ "net/http/pprof"
 	"os"
 )
 
