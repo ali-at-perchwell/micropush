@@ -66,16 +66,11 @@ func (sr *SubscriptionResource) Update(sub Subscription) error {
 	return nil
 }
 
-func NewSubscriptionFromRequest(c *gin.Context) (model.Subscription, error) { // bind this????
-	var s subscription.Subscription
+func NewSubscriptionFromRequest(c *gin.Context) (Subscription, error) { // bind this????
+	var s Subscription
 
-	if c.Bind(&s) == nil { // request params
-		log.Println(person.Name)
-		log.Println(person.Address)
-	}
-	if c.BindJSON(&s) == nil {
-		log.Println(s.Endpoint)
-		log.Println(s.Keys)
+	if err := c.BindJSON(&s); err != nil {
+		return nil.error
 	}
 
 	var existingToken string
