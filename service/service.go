@@ -21,7 +21,7 @@ type App struct {
 }
 
 // Initialize sets up the database connection and routes for the app
-func (a *App) Initialize(user, password, dbname, sslmode string) { // call this init() ?
+func (a *App) Initialize(user, password, dbname, sslmode string) {
 	connectionString :=
 		fmt.Sprintf("user=%s password=%s dbname=%s sslmode=%s", user, password, dbname, sslmode)
 
@@ -35,27 +35,32 @@ func (a *App) Initialize(user, password, dbname, sslmode string) { // call this 
 	a.initializeRoutes()
 }
 
-func (a *App) Run() { /// put in addr
-	log.Fatal(a.Router.Run()) //http.ListenAndServe(":8080", a.Router))
+func (a *App) Run(addr string) {
+	log.Fatal(a.Router.Run(addr))
 }
 
 func HealthCheck(c *gin.Context) {
-	c.String(200, "Success") // or c.JSON(200,
+	c.JSON(200, "Success")
 }
+
 func (a *App) initializeRoutes() {
+	// Health Check
 	a.Router.GET("/health", HealthCheck)
 
+	// Web Subscription
 	a.Router.POST("/subscribe/web", web.CreateSubscription)
 	a.Router.DELETE("/subscribe/web", web.DeleteSubscription)
-
 	a.Router.PUT("/subscribe/web", web.UpdateSubscription)
 
+	// Web Push
+	a.Router.POST("/push/web", web.CreatePush)
+	a.Router.PUT("/push/web", web.UpdatePush)
+
+	// Device Subscription
 	a.Router.POST("/subscribe/device", device.CreateSubscription)
 	a.Router.DELETE("/subscribe/device", device.DeleteSubscription)
 	a.Router.PUT("/subscribe/device", device.UpdateSubscription)
 
-	a.Router.POST("/push/web", web.CreatePush)
-	a.Router.PUT("/push/web", web.UpdatePush)
-
+	// Device Push
 	a.Router.POST("/push/device", device.CreatePush)
 }
