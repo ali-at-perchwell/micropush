@@ -7,7 +7,6 @@ import (
 
 	"github.com/getsentry/raven-go"
 	"github.com/gin-gonic/gin"
-	//"microservice/service" for err reporting??
 )
 
 type Subscription struct {
@@ -27,7 +26,7 @@ var ( // TODO: CHANGE SQL
 )
 
 type SubscriptionResource struct {
-	db sql.DB // debating this
+	db sql.DB
 }
 
 func (sr *SubscriptionResource) prepareDb(rawText string) (sqlTx sql.Tx) {
@@ -36,40 +35,42 @@ func (sr *SubscriptionResource) prepareDb(rawText string) (sqlTx sql.Tx) {
 		raven.CaptureError(err, nil)
 		return nil, err
 	}
-	defer sqlTx.Close() // yes?
+	defer sqlTx.Close() // ****
 
 	return sqlTx, nil
 }
 
-// NOTE: NOT SUPER DRY...WILL REVISIT
+// NOTE: NOT SUPER DRY...WILL REVISIT // TODO: CHECK BEGIN + PREP
 
-// BEGIN???? OR JUST PREP
-func (sr *SubscriptionResource) CreateSubscription(c *gin.Context) { // subscription created from json req
+func SubscriptionFromReq(c *gin.Context) (Subscription, error) {
 	var s Subscription
 	if err := c.BindJSON(&s); err != nil {
-		c.JSON(400, errors.New("Err: Problem decoding id sent")) // or send a specific one...nidids
+		return nil, errors.New(fmt.Sprintf("Err: Problem decoding id sent %s", str(err)))
+	}
+	return s, nil
+}
+
+func (sr *SubscriptionResource) CreateSubscription(c *gin.Context) {
+	s, err := SubscriptionFromReq(c)
+	if err != nil {
+		c.JSON(400, err)
 		return
 	}
 	_, err = sr.prepareDb(createSql).Exec(s.Endpoint, s.Keys.Auth, time.Now().Unix())
 
 	if err != nil {
-		c.JSON(400, errors.New("Err: Problem querying the db")) // or send a specific one...nidids
+		c.JSON(400, errors.New("Err: Problem querying the db"))
 		return
 	}
 	c.JSON(200, s)
 }
 
-func (sr *SubscriptionResource) GetSubscription(c *gin.Context) Subscription {
-	var s Subscription
-	if err := c.BindJSON(&s); err != nil {
-		c.JSON(400, errors.New("Err: Problem decoding id sent")) // or send a specific one...nidids
-		return nil
-	} // ret err?????
-	return s
-}
-
 func (sr *SubscriptionResource) DeleteSubscription(c *gin.Context) {
-	s := GetSubscription(c) // errrrr
+	s, err := SubscriptionFromReq(c)
+	if err != nil {
+		c.JSON(400, err)
+		return
+	}
 
 	_, err = sr.prepareDb(deleteSql).Exec(s.Endpoint, s.Keys.Auth, time.Now().Unix())
 	if err != nil {
@@ -80,7 +81,7 @@ func (sr *SubscriptionResource) DeleteSubscription(c *gin.Context) {
 }
 
 func (sr *SubscriptionResource) UpdateSubscription(c *gin.Context) {
-	s := GetSubscription(c) // errrrr
+	s, _ := GetSubscription(c)
 
 	_, err = sr.prepareDb(updateSql).Exec(sub.Endpoint, sub.Keys.Auth, time.Now().Unix())
 	if err != nil {
@@ -91,9 +92,9 @@ func (sr *SubscriptionResource) UpdateSubscription(c *gin.Context) {
 }
 
 func (sr *SubscriptionResource) getSubscriptionByAuthToken(c *gin.Context) (Subscription, error) { //*?????
-	authStr := c.Params.ByName("auth") // why would they have teh id
+	authStr := c.Params.ByName("auth")
 	var s subscription
-	err := sr.QueryRow("SELECT subscriber FROM subscribers WHERE auth=?", authStr).Scan(&s) // work for?
+	err := sr.QueryRow("SELECT subscriber FROM subscribers WHERE auth=?", authStr).Scan(&s)
 
 	if err != nil {
 		log.Print(err)
@@ -102,9 +103,9 @@ func (sr *SubscriptionResource) getSubscriptionByAuthToken(c *gin.Context) (Subs
 	return s, nil
 }
 
-func (sr *SubscriptionResource) QueryByAuthToken(query string) (bool, error) { // do the check each time??
+func (sr *SubscriptionResource) QueryByAuthToken(query string) (bool, error) {
 	var existingToken string
-	// guard for type this way what if the env didnt have teh right type!
+
 	err := db.QueryRow(query).Scan(&existingToken)
 	if err != nil {
 		return false, err

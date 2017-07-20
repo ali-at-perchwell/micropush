@@ -8,10 +8,12 @@ import (
 
 func main() {
 	a := service.App{}
-	a.Initialize( // TODO: make this into a conifg
+	// TODO: make this into a conifg
+	a.Initialize(
 		os.Getenv("APP_DB_USERNAME"),
 		os.Getenv("APP_DB_PASSWORD"),
-		os.Getenv("APP_DB_NAME"))
+		os.Getenv("APP_DB_NAME"),
+		os.Getenv("APP_DB_SSLMODE"))
 
 	a.Run()
 }

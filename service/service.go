@@ -21,9 +21,9 @@ type App struct {
 }
 
 // Initialize sets up the database connection and routes for the app
-func (a *App) Initialize(user, password, dbname string) { // call this init() ?
+func (a *App) Initialize(user, password, dbname, sslmode string) { // call this init() ?
 	connectionString :=
-		fmt.Sprintf("user=%s password=%s dbname=%s", user, password, dbname)
+		fmt.Sprintf("user=%s password=%s dbname=%s sslmode=%s", user, password, dbname, sslmode)
 
 	var err error
 	a.DB, err = sql.Open("postgres", connectionString)
